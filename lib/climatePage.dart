@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'apiFile.dart' as util;
 import 'package:http/http.dart' as http;
 
+double Celsius=0;
+int CelsiusInt=0;
+
 class climateApp extends StatefulWidget {
   const climateApp({Key? key}) : super(key: key);
 
@@ -44,11 +47,21 @@ class _climateAppState extends State<climateApp> {
             margin: EdgeInsets.fromLTRB(0, 15, 15, 0),
             alignment: Alignment.topRight,
             child: Text('Karachi', style: KcityName(),),
-          )
+          ),
+          Center(
+            child: Image(
+              image: AssetImage('images/light_rain.png'),
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.fromLTRB(30.0, 90.0, 0.0, 0.0),
+            child: updateTempWidget('Karachi'),
+          ),
         ],
       ),
     );
   }
+
   Future <Map> getWeather (String apiId, String city) async
   {
     String apiUrl = 'https://api.openweathermap.org/data/2.5/weather?q=$city&appid='
@@ -57,9 +70,55 @@ class _climateAppState extends State<climateApp> {
     http.Response response=await http.get(Uri.parse(apiUrl));
     return json.decode(response.body);
   }
+
+  Widget updateTempWidget(String city) {
+    return FutureBuilder(
+        future: getWeather(util.apiId, city == null ? util.city : city),
+        builder: (BuildContext context, AsyncSnapshot<Map> snapshot) {
+          //where we get all of the json data, we setup widgets etc.
+          if (snapshot.hasData) {
+            Map? content = snapshot.data;
+            Celsius = ((content!['main']['temp'])-32)*5/9;
+            CelsiusInt = Celsius.round();
+            return Container(
+              margin: const EdgeInsets.fromLTRB(30.0, 250.0, 0.0, 0.0),
+              child: new Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  new ListTile(
+                    title: new Text(
+                      CelsiusInt.toString() + " C",
+                      style: new TextStyle(
+                          fontStyle: FontStyle.normal,
+                          fontSize: 49.9,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500),
+                    ),
+                    subtitle: new ListTile(
+                      title: new Text(
+                        "Humidity: ${content['main']['humidity'].toString()}\n"
+                            "Min: ${content['main']['temp_min'].toString()} F\n"
+                            "Max: ${content['main']['temp_max'].toString()} F ",
+                        style: extraData(),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            );
+          } else {
+            return Container();
+          }
+        });
+  }
 }
 
 TextStyle KcityName() {
   return TextStyle(
       fontWeight: FontWeight.w500, fontSize: 20, color: Colors.white,fontStyle: FontStyle.italic);
+}
+
+TextStyle extraData() {
+  return const TextStyle(
+      color: Colors.white70, fontStyle: FontStyle.normal, fontSize: 17.0);
 }

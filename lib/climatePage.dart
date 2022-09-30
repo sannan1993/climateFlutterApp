@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'apiFile.dart' as util;
 import 'package:http/http.dart' as http;
 
-double Celsius=0;
-int CelsiusInt=0;
+double Celsius = 0;
+int CelsiusInt = 0;
 
 class climateApp extends StatefulWidget {
   const climateApp({Key? key}) : super(key: key);
@@ -14,8 +14,20 @@ class climateApp extends StatefulWidget {
 }
 
 class _climateAppState extends State<climateApp> {
+  late String _cityEntered;
+
+  Future _goToNextScreen(BuildContext context) async {
+    Map? results = await Navigator.of(context)
+        .push(MaterialPageRoute<Map>(builder: (BuildContext context) {
+      return changeCity();
+    }));
+    if (results != null && results.containsKey('enter')) {
+      _cityEntered = results['enter'];
+    }
+  }
+
   @override
-  void showStuff() async{
+  void showStuff() async {
     Map data = await getWeather(util.apiId, util.city);
     print(data.toString());
   }
@@ -30,7 +42,8 @@ class _climateAppState extends State<climateApp> {
         actions: [
           IconButton(
               onPressed: () {
-                showStuff();
+                _goToNextScreen(context);
+                //showStuff();
               },
               icon: Icon(Icons.menu))
         ],
@@ -38,15 +51,20 @@ class _climateAppState extends State<climateApp> {
       body: Stack(
         children: [
           Center(
-            child: Image(image: AssetImage('images/umbrella.png'),
+            child: Image(
+              image: AssetImage('images/umbrella.png'),
               width: 500,
               height: 1200,
-              fit: BoxFit.fill,),
+              fit: BoxFit.fill,
+            ),
           ),
           Container(
             margin: EdgeInsets.fromLTRB(0, 15, 15, 0),
             alignment: Alignment.topRight,
-            child: Text('Karachi', style: KcityName(),),
+            child: Text(
+              'Karachi',
+              style: KcityName(),
+            ),
           ),
           Center(
             child: Image(
@@ -62,12 +80,12 @@ class _climateAppState extends State<climateApp> {
     );
   }
 
-  Future <Map> getWeather (String apiId, String city) async
-  {
-    String apiUrl = 'https://api.openweathermap.org/data/2.5/weather?q=$city&appid='
+  Future<Map> getWeather(String apiId, String city) async {
+    String apiUrl =
+        'https://api.openweathermap.org/data/2.5/weather?q=$city&appid='
         '${util.apiId}&units=imperial';
     //https://api.openweathermap.org/data/2.5/weather?q=Karachi&appid=29ad10ea8524b4f70897c6a096210b8d
-    http.Response response=await http.get(Uri.parse(apiUrl));
+    http.Response response = await http.get(Uri.parse(apiUrl));
     return json.decode(response.body);
   }
 
@@ -78,7 +96,7 @@ class _climateAppState extends State<climateApp> {
           //where we get all of the json data, we setup widgets etc.
           if (snapshot.hasData) {
             Map? content = snapshot.data;
-            Celsius = ((content!['main']['temp'])-32)*5/9;
+            Celsius = ((content!['main']['temp']) - 32) * 5 / 9;
             CelsiusInt = Celsius.round();
             return Container(
               margin: const EdgeInsets.fromLTRB(30.0, 250.0, 0.0, 0.0),
@@ -97,8 +115,8 @@ class _climateAppState extends State<climateApp> {
                     subtitle: new ListTile(
                       title: new Text(
                         "Humidity: ${content['main']['humidity'].toString()}\n"
-                            "Min: ${content['main']['temp_min'].toString()} F\n"
-                            "Max: ${content['main']['temp_max'].toString()} F ",
+                        "Min: ${content['main']['temp_min'].toString()} F\n"
+                        "Max: ${content['main']['temp_max'].toString()} F ",
                         style: extraData(),
                       ),
                     ),
@@ -113,9 +131,59 @@ class _climateAppState extends State<climateApp> {
   }
 }
 
+class changeCity extends StatelessWidget {
+  var _cityFieldController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Change City"),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          Center(
+            child: Image.asset(
+              'images/white_snow.png',
+              height: 1200,
+              width: 500,
+              fit: BoxFit.fill,
+            ),
+          ),
+          ListView(
+            children: [
+              ListTile(
+                title: TextField(
+                  decoration: InputDecoration(
+                      hintText: 'Lahore', labelText: "Enter city name"),
+                  controller: _cityFieldController,
+                  keyboardType: TextInputType.text,
+                ),
+              ),
+              ListTile(
+                title: TextButton(
+                  child: Text("Get weather"),
+                  onPressed: () {
+                    Navigator.pop(context, {'enter', _cityFieldController.text});
+                  },
+
+                ),
+              )
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
+
 TextStyle KcityName() {
   return TextStyle(
-      fontWeight: FontWeight.w500, fontSize: 20, color: Colors.white,fontStyle: FontStyle.italic);
+      fontWeight: FontWeight.w500,
+      fontSize: 20,
+      color: Colors.white,
+      fontStyle: FontStyle.italic);
 }
 
 TextStyle extraData() {

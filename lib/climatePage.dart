@@ -1,25 +1,30 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'apiFile.dart' as util;
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 double Celsius = 0;
 int CelsiusInt = 0;
 
-class climateApp extends StatefulWidget {
-  const climateApp({Key? key}) : super(key: key);
 
+
+class climateApp extends StatefulWidget {
   @override
   State<climateApp> createState() => _climateAppState();
 }
 
 class _climateAppState extends State<climateApp> {
-  late String _cityEntered;
+  void showStuff() async {
+    Map data = await getWeather(util.apiId, util.city);
+    print(data.toString());
+  }
+
+  String? _cityEntered;
 
   Future _goToNextScreen(BuildContext context) async {
-    Map? results = await Navigator.of(context)
-        .push(MaterialPageRoute<Map>(builder: (BuildContext context) {
-      return changeCity();
+    Map? results = await  Navigator.of(context)
+        .push(new MaterialPageRoute<Map>(builder: (BuildContext context) {
+      return new changeCity();
     }));
     if (results != null && results.containsKey('enter')) {
       _cityEntered = results['enter'];
@@ -27,10 +32,7 @@ class _climateAppState extends State<climateApp> {
   }
 
   @override
-  void showStuff() async {
-    Map data = await getWeather(util.apiId, util.city);
-    print(data.toString());
-  }
+
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +64,7 @@ class _climateAppState extends State<climateApp> {
             margin: EdgeInsets.fromLTRB(0, 15, 15, 0),
             alignment: Alignment.topRight,
             child: Text(
-              'Karachi',
+              '${_cityEntered == null ? util.city : _cityEntered}',
               style: KcityName(),
             ),
           ),
@@ -73,7 +75,7 @@ class _climateAppState extends State<climateApp> {
           ),
           Container(
             margin: EdgeInsets.fromLTRB(30.0, 90.0, 0.0, 0.0),
-            child: updateTempWidget('Karachi'),
+            child: updateTempWidget('${_cityEntered == null ? util.city : _cityEntered}'),
           ),
         ],
       ),
@@ -156,18 +158,19 @@ class changeCity extends StatelessWidget {
               ListTile(
                 title: TextField(
                   decoration: InputDecoration(
-                      hintText: 'Lahore', labelText: "Enter city name"),
+                      hintText: 'Hint: Lahore , Karachi etc', labelText: "Enter city name"),
                   controller: _cityFieldController,
                   keyboardType: TextInputType.text,
                 ),
               ),
               ListTile(
-                title: TextButton(
+                title: ElevatedButton(
                   child: Text("Get weather"),
                   onPressed: () {
-                    Navigator.pop(context, {'enter', _cityFieldController.text});
+                    print(_cityFieldController.text);
+                    Navigator.pop(
+                        context, {'enter' : _cityFieldController.text});
                   },
-
                 ),
               )
             ],
